@@ -16,6 +16,7 @@ import ConsultantDashboard from './pages/consultant/Dashboard';
 import Logistics from './pages/consultant/Logistics';
 import AdminDashboard from './pages/admin/Dashboard';
 import Orders from './pages/customer/Orders';
+import Cart from './pages/customer/Cart';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
@@ -51,6 +52,11 @@ function App() {
                 <Route path="/orders" element={
                   <ProtectedRoute allowedRoles={['customer']}>
                     <Orders />
+                  </ProtectedRoute>
+                } />
+                <Route path="/cart" element={
+                  <ProtectedRoute allowedRoles={['customer']}>
+                    <Cart />
                   </ProtectedRoute>
                 } />
                 

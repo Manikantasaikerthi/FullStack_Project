@@ -3,6 +3,7 @@ import { useData } from '../../context/DataContext';
 import { useAuth } from '../../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { Package, Clock, Truck, CheckCircle, MapPin, Phone } from 'lucide-react';
+import TranslatedText from '../../components/common/TranslatedText';
 
 const Orders = () => {
   const { orders } = useData();
@@ -84,7 +85,7 @@ const Orders = () => {
                     }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
                         <div>
-                          <p style={{ fontWeight: '600', fontSize: '1.1rem' }}>{item.name}</p>
+                          <p style={{ fontWeight: '600', fontSize: '1.1rem' }}><TranslatedText text={item.name} /></p>
                           <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>{t('artisan')}: {item.artisanName}</p>
                         </div>
                         <p style={{ fontWeight: '700', color: 'var(--primary)' }}>₹{item.price}</p>

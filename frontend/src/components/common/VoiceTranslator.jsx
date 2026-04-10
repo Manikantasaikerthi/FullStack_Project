@@ -10,6 +10,12 @@ const VoiceTranslator = ({ onTranslate, currentLang }) => {
   const [error, setError] = useState(null);
   
   const recognitionRef = useRef(null);
+  const speakingLangRef = useRef(speakingLang);
+
+  // Sync ref with state to avoid stale closures in async callbacks
+  useEffect(() => {
+    speakingLangRef.current = speakingLang;
+  }, [speakingLang]);
 
   // Map app languages to speech recognition codes
   const langMap = {
@@ -32,7 +38,8 @@ const VoiceTranslator = ({ onTranslate, currentLang }) => {
       recognitionRef.current.onresult = async (event) => {
         const transcript = event.results[0][0].transcript;
         setIsListening(false);
-        await translateToEnglish(transcript);
+        // Use the ref to get the latest selected language
+        await translateToEnglish(transcript, speakingLangRef.current);
       };
 
       recognitionRef.current.onerror = (event) => {
@@ -45,8 +52,10 @@ const VoiceTranslator = ({ onTranslate, currentLang }) => {
     }
   }, [t]);
 
-  const translateToEnglish = async (text) => {
-    if (speakingLang === 'en') {
+  const translateToEnglish = async (text, langCode) => {
+    const currentSpeakingLang = langCode || speakingLang;
+
+    if (currentSpeakingLang === 'en') {
       onTranslate(text);
       return;
     }
@@ -55,7 +64,7 @@ const VoiceTranslator = ({ onTranslate, currentLang }) => {
     try {
       // Using Google Translate (gtx) API - More robust for semantic translation
       const response = await fetch(
-        `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${speakingLang}&tl=en&dt=t&q=${encodeURIComponent(text)}`
+        `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${currentSpeakingLang}&tl=en&dt=t&q=${encodeURIComponent(text)}`
       );
       const data = await response.json();
       

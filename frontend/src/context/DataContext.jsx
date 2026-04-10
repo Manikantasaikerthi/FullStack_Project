@@ -11,7 +11,11 @@ export const DataProvider = ({ children }) => {
   const [products, setProducts] = useState([]);
   const [artisanRequests, setArtisanRequests] = useState([]);
   const [orders, setOrders] = useState([]);
-  const [users, setUsers] = useState([]); // Added to track all users for stats
+  const [users, setUsers] = useState([]);
+  const [cart, setCart] = useState(() => {
+    const saved = localStorage.getItem('tribal_cart');
+    return saved ? JSON.parse(saved) : [];
+  });
   
   const { user } = useAuth();
   
@@ -93,6 +97,10 @@ export const DataProvider = ({ children }) => {
   useEffect(() => {
     fetchData();
   }, [user]);
+
+  useEffect(() => {
+    localStorage.setItem('tribal_cart', JSON.stringify(cart));
+  }, [cart]);
 
   const addProduct = async (productData) => {
     try {
@@ -195,6 +203,20 @@ export const DataProvider = ({ children }) => {
     } catch(e) {}
   };
 
+  const addToCart = (product) => {
+    setCart(prev => [...prev, product]);
+  };
+
+  const removeFromCart = (index) => {
+    setCart(prev => {
+      const newCart = [...prev];
+      newCart.splice(index, 1);
+      return newCart;
+    });
+  };
+
+  const clearCart = () => setCart([]);
+
   const getStats = () => {
     return {
       totalProducts: products.length,
@@ -223,7 +245,11 @@ export const DataProvider = ({ children }) => {
     rejectArtisan,
     deleteProductsByArtisan,
     getStats,
-    approveArtisan
+    approveArtisan,
+    cart,
+    addToCart,
+    removeFromCart,
+    clearCart
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTranslation } from 'react-i18next';
-import { ShoppingBag, User, LogOut, LayoutDashboard, ShieldCheck, PenTool, Languages, ChevronDown, UserCircle, Package, Truck } from 'lucide-react';
+import { ShoppingBag, User, LogOut, LayoutDashboard, ShieldCheck, PenTool, Languages, ChevronDown, UserCircle, Package, Truck, ShoppingBasket } from 'lucide-react';
+import { useData } from '../../context/DataContext';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
+  const { cart } = useData();
   const [showLangs, setShowLangs] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
 
@@ -21,19 +23,41 @@ const Navbar = () => {
     { code: 'mr', name: 'ಮರಾठी' }
   ];
 
+  const toggleCart = () => {
+    navigate('/cart');
+    setShowUserMenu(false);
+    setShowLangs(false);
+  };
+
+  const toggleUserMenu = () => {
+    setShowUserMenu(!showUserMenu);
+    setShowLangs(false);
+  };
+
+  const toggleLangs = () => {
+    setShowLangs(!showLangs);
+    setShowUserMenu(false);
+  };
+
+  const closeAll = () => {
+    setShowUserMenu(false);
+    setShowLangs(false);
+  };
+
   const changeLanguage = (code) => {
     i18n.changeLanguage(code);
-    setShowLangs(false);
+    closeAll();
   };
 
   const handleLogout = () => {
     logout();
+    closeAll();
     navigate('/login');
   };
 
   return (
     <nav className="glass-card" style={{ margin: '1rem', padding: '1rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: '1rem', zIndex: 1000 }}>
-      <Link to="/" style={{ textDecoration: 'none', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+      <Link to="/" onClick={closeAll} style={{ textDecoration: 'none', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
         <div style={{ background: 'var(--primary)', padding: '0.5rem', borderRadius: '12px' }}>
           <ShoppingBag size={24} color="white" />
         </div>
@@ -44,7 +68,7 @@ const Navbar = () => {
         {/* Language Switcher */}
         <div style={{ position: 'relative' }}>
           <button 
-            onClick={() => setShowLangs(!showLangs)}
+            onClick={toggleLangs}
             style={{ background: 'var(--glass)', border: '1px solid var(--glass-border)', color: 'var(--text)', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', cursor: 'pointer' }}
           >
             <Languages size={18} />
@@ -67,7 +91,7 @@ const Navbar = () => {
           )}
         </div>
 
-        <Link to="/" style={{ color: 'var(--text)', textDecoration: 'none', fontWeight: '500' }}>{t('explore')}</Link>
+        <Link to="/" onClick={closeAll} style={{ color: 'var(--text)', textDecoration: 'none', fontWeight: '500' }}>{t('explore')}</Link>
         
         {user ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
@@ -76,7 +100,7 @@ const Navbar = () => {
                 <Link to="/artisan" style={{ color: 'var(--text)', textDecoration: 'none', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <PenTool size={18} /> {t('dashboard')}
                 </Link>
-                <Link to="/artisan/manage-orders" style={{ color: 'var(--text)', textDecoration: 'none', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Link to="/artisan/manage-orders" onClick={closeAll} style={{ color: 'var(--text)', textDecoration: 'none', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <Package size={18} /> {t('orders')}
                 </Link>
               </div>
@@ -97,14 +121,29 @@ const Navbar = () => {
               </Link>
             )}
             {user.role === 'customer' && (
-               <Link to="/orders" style={{ color: 'var(--text)', textDecoration: 'none', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Package size={18} /> {t('orders')}
-              </Link>
+               <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                <Link to="/orders" style={{ color: 'var(--text)', textDecoration: 'none', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Package size={18} /> {t('orders')}
+                </Link>
+                
+                <button 
+                  onClick={toggleCart}
+                  style={{ background: 'transparent', color: 'var(--text)', border: 'none', cursor: 'pointer', position: 'relative', display: 'flex', alignItems: 'center', padding: '5px' }}
+                  title="View Cart"
+                >
+                  <ShoppingBasket size={24} />
+                  {cart.length > 0 && (
+                    <span style={{ position: 'absolute', top: '-5px', right: '-5px', background: 'var(--primary)', color: 'white', borderRadius: '50%', minWidth: '18px', height: '18px', fontSize: '0.7rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', padding: '0 4px', border: '2px solid var(--surface)' }}>
+                      {cart.length}
+                    </span>
+                  )}
+                </button>
+               </div>
             )}
             
             <div style={{ position: 'relative' }}>
               <button 
-                onClick={() => setShowUserMenu(!showUserMenu)}
+                onClick={toggleUserMenu}
                 style={{ background: 'var(--surface-light)', color: 'var(--text)', padding: '5px 15px', borderRadius: '30px', display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', border: '1px solid var(--glass-border)' }}
               >
                 <UserCircle size={20} />
@@ -114,7 +153,7 @@ const Navbar = () => {
 
               {showUserMenu && (
                 <div className="glass-card animate-fade-in" style={{ position: 'absolute', top: '100%', right: 0, marginTop: '0.5rem', width: '180px', overflow: 'hidden', zIndex: 1001 }}>
-                  <Link to="/profile" onClick={() => setShowUserMenu(false)} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '12px 16px', color: 'var(--text)', textDecoration: 'none', fontSize: '0.9rem' }}>
+                  <Link to="/profile" onClick={closeAll} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '12px 16px', color: 'var(--text)', textDecoration: 'none', fontSize: '0.9rem' }}>
                     <User size={16} /> Profile Settings
                   </Link>
                   <button 
