@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { useData } from '../../context/DataContext';
 import { useAuth } from '../../context/AuthContext';
 import { useTranslation } from 'react-i18next';
-import { 
-  TrendingUp, Users, ShoppingBag, DollarSign, 
-  BarChart2, Activity, Trash2, User, Briefcase, 
+import {
+  TrendingUp, Users, ShoppingBag, DollarSign,
+  BarChart2, Activity, Trash2, User, Briefcase,
   List, Package, CheckCircle, Clock
 } from 'lucide-react';
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, 
-  Tooltip, ResponsiveContainer, AreaChart, Area 
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid,
+  Tooltip, ResponsiveContainer, AreaChart, Area
 } from 'recharts';
 
 const AdminDashboard = () => {
@@ -17,7 +17,7 @@ const AdminDashboard = () => {
   const { getAllUsers, deleteUser } = useAuth();
   const stats = getStats();
   const { t } = useTranslation();
-  
+
   const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'users', or 'orders'
   const [allUsers, setAllUsers] = useState([]);
 
@@ -39,26 +39,64 @@ const AdminDashboard = () => {
     setAllUsers(prev => prev.filter(u => u.id !== userToDelete.id));
   };
 
-  // Mock chart data
-  const revenueData = [
-    { name: 'Jan', revenue: 0, profit: 0 },
-    { name: 'Feb', revenue: 0, profit: 0 },
-    { name: 'Mar', revenue: 0, profit: 0 },
-    { name: 'Apr', revenue: 0, profit: 0 },
-    { name: 'May', revenue: 0, profit: 0 },
-    { name: 'Jun', revenue: 0, profit: 0 },
-    { name: 'Jul', revenue: 0, profit: 0 },
-  ];
+  // Dynamic chart data derived from actual orders
+  const revenueData = React.useMemo(() => {
+    const months = [
+      t('month_jan', 'Jan'), t('month_feb', 'Feb'), t('month_mar', 'Mar'),
+      t('month_apr', 'Apr'), t('month_may', 'May'), t('month_jun', 'Jun'),
+      t('month_jul', 'Jul'), t('month_aug', 'Aug'), t('month_sep', 'Sep'),
+      t('month_oct', 'Oct'), t('month_nov', 'Nov'), t('month_dec', 'Dec')
+    ];
 
-  const categoryData = [
-    { name: 'Mon', total: 0 },
-    { name: 'Tue', total: 0 },
-    { name: 'Wed', total: 0 },
-    { name: 'Thu', total: 0 },
-    { name: 'Fri', total: 0 },
-    { name: 'Sat', total: 0 },
-    { name: 'Sun', total: 0 },
-  ];
+    const data = months.map(m => ({ name: m, revenue: 0, profit: 0 }));
+
+    orders.forEach(order => {
+      try {
+        const date = new Date(order.createdAt);
+        const monthNum = date.getMonth();
+        if (monthNum >= 0 && monthNum < 12) {
+          const amount = Number(order.total) || 0;
+          data[monthNum].revenue += amount;
+          data[monthNum].profit += amount * 0.2;
+        }
+      } catch (e) {
+        console.error("Error parsing order date for revenue overview", e);
+      }
+    });
+
+    return data;
+  }, [orders, t]);
+
+  const categoryData = React.useMemo(() => {
+    const daysMap = {
+      0: t('day_sun', 'Sun'),
+      1: t('day_mon', 'Mon'),
+      2: t('day_tue', 'Tue'),
+      3: t('day_wed', 'Wed'),
+      4: t('day_thu', 'Thu'),
+      5: t('day_fri', 'Fri'),
+      6: t('day_sat', 'Sat')
+    };
+
+    const displayOrder = [1, 2, 3, 4, 5, 6, 0]; // Mon-Sun
+    const data = displayOrder.map(dayNum => ({ name: daysMap[dayNum], total: 0 }));
+
+    orders.forEach(order => {
+      try {
+        const date = new Date(order.createdAt);
+        const dayNum = date.getDay();
+        const dayName = daysMap[dayNum];
+        const target = data.find(d => d.name === dayName);
+        if (target) {
+          target.total += 1; // Tracking overall traffic as order frequency
+        }
+      } catch (e) {
+        console.error("Error parsing order date for traffic chart", e);
+      }
+    });
+
+    return data;
+  }, [orders, t]);
 
   const StatCard = ({ title, value, icon: Icon, trend, color, isCurrency }) => (
     <div className="glass-card" style={{ padding: '1.5rem' }}>
@@ -84,16 +122,16 @@ const AdminDashboard = () => {
         </div>
         <div style={{ display: 'flex', background: 'var(--surface-light)', padding: '4px', borderRadius: '12px', gap: '4px' }}>
           {['overview', 'users', 'orders'].map(tab => (
-            <button 
+            <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              style={{ 
-                padding: '8px 16px', 
-                borderRadius: '8px', 
-                border: 'none', 
-                background: activeTab === tab ? 'var(--primary)' : 'transparent', 
-                color: activeTab === tab ? 'white' : 'var(--text-dim)', 
-                cursor: 'pointer', 
+              style={{
+                padding: '8px 16px',
+                borderRadius: '8px',
+                border: 'none',
+                background: activeTab === tab ? 'var(--primary)' : 'transparent',
+                color: activeTab === tab ? 'white' : 'var(--text-dim)',
+                cursor: 'pointer',
                 fontWeight: '600',
                 textTransform: 'capitalize'
               }}
@@ -139,7 +177,7 @@ const AdminDashboard = () => {
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                     <XAxis dataKey="name" stroke="var(--text-dim)" fontSize={12} tickLine={false} axisLine={false} />
                     <YAxis stroke="var(--text-dim)" fontSize={12} tickLine={false} axisLine={false} />
-                    <Tooltip cursor={{fill: 'rgba(255,255,255,0.05)'}} contentStyle={{ background: 'var(--surface)', border: '1px solid var(--glass-border)', borderRadius: '8px' }} />
+                    <Tooltip cursor={{ fill: 'rgba(255,255,255,0.05)' }} contentStyle={{ background: 'var(--surface)', border: '1px solid var(--glass-border)', borderRadius: '8px' }} />
                     <Bar dataKey="total" fill="var(--secondary)" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
