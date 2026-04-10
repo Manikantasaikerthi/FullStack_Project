@@ -1,0 +1,37 @@
+package com.tribal.marketplace.entity;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Entity
+@Table(name = "orders")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class Order {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String customerEmail;
+
+    private String customerName;
+    private String customerPhone;
+    private String customerAddress;
+
+    @Column(nullable = false)
+    private Double total;
+
+    @Column(nullable = false)
+    private String status; // 'PENDING', 'PROCESSING', 'SHIPPED_TO_CUSTOMER', 'DELIVERED'
+
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItem> items;
+}
