@@ -35,10 +35,17 @@ public class ProductController {
 
     @PostMapping
     @PreAuthorize("hasRole('ARTISAN')")
-    public ResponseEntity<Product> addProduct(@RequestBody Product product, @RequestHeader("Authorization") String token) {
-        String email = jwtUtil.extractUsername(token.substring(7));
-        product.setArtisanEmail(email);
-        return ResponseEntity.ok(productService.addProduct(product));
+    public ResponseEntity<?> addProduct(@RequestBody Product product, @RequestHeader("Authorization") String token) {
+        try {
+            String email = jwtUtil.extractUsername(token.substring(7));
+            product.setArtisanEmail(email);
+            Product saved = productService.addProduct(product);
+            return ResponseEntity.ok(saved);
+        } catch (Exception e) {
+            System.err.println("CRITICAL ERROR adding product: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Internal error: " + e.getMessage());
+        }
     }
 
     // Consultant endpoints

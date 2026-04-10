@@ -104,6 +104,9 @@ export const DataProvider = ({ children }) => {
         if (res.ok) {
             await fetchData();
             return true;
+        } else {
+            const errorBody = await res.text();
+            console.error("Failed to add product. Status:", res.status, "Body:", errorBody);
         }
     } catch(e) {}
     return false;
